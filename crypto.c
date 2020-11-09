@@ -16,8 +16,9 @@ void menu(void);
 void haveKey(void);
 void error(void);
 void export(void);
+void cleanStdin(void);
 
-int main(void){
+int main(void){                       // menu inizale
   puts("\t[1] Create a new key.");
   puts("\t[2] I already have a key.");
   puts("\t[q] quit.");
@@ -45,20 +46,24 @@ int main(void){
   }
 }
 
-void haveKey() {
+void haveKey() {           // opzione 2 (ho già la chiave)
   puts("Type your ciphertext:");
-  printf("\033[0;36m");
+  printf("\t\033[0;36m");
   fgets(C, MAX_LEN, stdin);
+  if(strlen(C) == MAX_LEN-1)
+    cleanStdin();
   printf("\033[0m");
   puts("Type your key:");
-  printf("\033[0;36m");
+  printf("\t\033[0;36m");
   fgets(k, MAX_LEN, stdin);
+  if(strlen(k) == MAX_LEN-1)
+    cleanStdin();
   printf("\033[0m");
   decrypt(C, k);
 
 }
 
-char* takeKey(void){
+char* takeKey(void){            //funzione per prendere in ingresso una chiave
   getchar();
   do {
     puts("\nPlease type a string greater or equal to M (cleartext):");
@@ -69,7 +74,7 @@ char* takeKey(void){
   return k;
 }
 
-char* generatek(void) {
+char* generatek(void) {         //funzione per genarare in automatico la chiave
   time_t t;
   srand((unsigned) time(&t));
   for (int i = 0; strlen(k)+2 <= strlen(M); i++) {
@@ -79,7 +84,7 @@ char* generatek(void) {
   printf("KEY (k): \033[0;32m%s\033[0m, Size: %ld\n", k, strlen(k));
   printf("HEX (k): \e[0;35m\n");
   short i = 0;
-  while (k[i] != '\n') {
+  while (k[i] != '\n') {  //stampa in hex
     printf("%2x ", k[i]);
     if((i%8)==0)
       puts("");
@@ -95,20 +100,20 @@ char* generatek(void) {
 }
 
 
-void crypt(char M[], char k[]){
+void crypt(char M[], char k[]){   //funzione per cifrare
   for (int i = 0; i < strlen(k); i++) {
     C[i] = M[i]^k[i];
   }
   printf("%c[1m\n\t\tCiphertext (C)%c[0m\n", 27, 27);
   puts("=============================================");
   fflush(stdout);
-  printf("%s\n", C);
+  printf("%s\n", C);//fflush(stdout) -> evito che alcuni caratteri rovinino la stampa
   fflush(stdout);
 
   puts("=============================================");
   printf("HEX (C): \e[0;35m\n");
   short i = 0;
-  while (C[i] != '\n') {
+  while (C[i] != '\n') { //stampa in hex
     printf("%2x ", C[i]);
     if((i%8)==0)
       puts("");
@@ -119,12 +124,12 @@ void crypt(char M[], char k[]){
   puts("\e[0m");
 }
 
-void decrypt(char C[], char k[]){
+void decrypt(char C[], char k[]){  //funzione per decifrare
   for (int i = 0; i < strlen(k); i++) {
     M[i] = C[i]^k[i];
   }
   printf("%c[1mCleartext (M): %c[0m %s", 27, 27, M);
-  printf("HEX (M): \e[0;35m\n");
+  printf("\nHEX (M): \e[0;35m\n");
   short i = 0;
   while (M[i] != '\n') {
     printf("%2x ", M[i]);
@@ -135,41 +140,41 @@ void decrypt(char C[], char k[]){
     ++i;
   }
   puts("\e[0m");
+  puts("\n\e[0;30m[Enter] to continue\e[0m");
   export();
 }
 
 void menu(){
   printf("\033[01;33m \n\tPlease insert your cleartext (max 128 chars): \033[0m");
-  fgets(M, MAX_LEN, stdin); // prendo il Cleartext e controllo non sia + di 128
-  unsigned short c;
+  fgets(M, MAX_LEN, stdin); // prendo il Cleartext e controllo non sia più di 128
   printf("\e[1;1H\e[2J\n"); // inizio Menu
   puts("\t(1) I'm going to choose a key.");
   puts("\t(2) Please generate me one.");
   printf("\n\033[01;33mHow do you want to proceed? \033[0m"); //Fine
-  scanf("%hi", &c); //gestione scelta dell'utente
-  switch (c) {
-    case 1:
+  switch (getchar()) {
+    case '1':
     takeKey();
     crypt(M, k);
     decrypt(C, k);
     break;
-    case 2:
+    case '2':
     generatek();
     crypt(M, k);
     decrypt(C, k);
     break;
     default:
-    error();
+    error(); //se la scelta è sbagliata o il cleartext inserito è > di 128 caratteri genera un errore
     break;
   }
 }
 
-void error(void){
+void error(void){ // funzione per generare l'errore
+  printf("\e[1;1H\e[2J\n");
   puts("\033[0;31mYour input is incorrect\a\033[0m");
   abort();
 }
 
-void export(void){
+void export(void){ // funzione per salvare i risultati su file
   void write(void){
     FILE *fileptr;
     fileptr = fopen("export.txt", "w");
@@ -182,6 +187,7 @@ void export(void){
       fclose(fileptr);
     }
   }
+  cleanStdin(); //evito che un precedente input troppo grandi skippi questa scelta
   printf("Do you want to export to a text file? (Y/n): ");
   unsigned short c = getchar();
   switch (c) {
@@ -195,4 +201,11 @@ void export(void){
       write();
     break;
   }
+}
+
+void cleanStdin(void){ //pulisce lo stardard input
+  unsigned short c;
+  do{
+    c = getchar();
+  }  while (c != '\n' && c != EOF );
 }
