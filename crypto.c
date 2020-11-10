@@ -18,7 +18,7 @@ void error(void);
 void export(void);
 void cleanStdin(void);
 
-int main(void){                       // menu inizale
+int main(void){                       // menu iniziale
   puts("\t[1] Create a new key.");
   puts("\t[2] I already have a key.");
   puts("\t[q] quit.");
@@ -50,7 +50,7 @@ void haveKey() {           // opzione 2 (ho già la chiave)
   puts("Type your ciphertext:");
   printf("\t\033[0;36m");
   fgets(C, MAX_LEN, stdin);
-  if(strlen(C) == MAX_LEN-1)
+  if(strlen(C) == MAX_LEN-1) //evito che l'input precedente sovrascriva il successivo
     cleanStdin();
   printf("\033[0m");
   puts("Type your key:");
@@ -78,7 +78,7 @@ char* generatek(void) {         //funzione per genarare in automatico la chiave
   time_t t;
   srand((unsigned) time(&t));
   for (int i = 0; strlen(k)+2 <= strlen(M); i++) {
-      char r = "!\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~]*"[rand() % 93];
+      char r = "!\"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~]*"[rand() % 93]; // posso fare 32 + rand() % 96, ma così vedo i caratteri possibili
       k[i] = i + r;
   }
   printf("KEY (k): \033[0;32m%s\033[0m, Size: %ld\n", k, strlen(k));
@@ -86,9 +86,9 @@ char* generatek(void) {         //funzione per genarare in automatico la chiave
   short i = 0;
   while (k[i] != '\n') {  //stampa in hex
     printf("%2x ", k[i]);
-    if((i%8)==0)
+    if((i%8)==0) // quando ne stampa 8 va a capo (più ordinato)
       puts("");
-    if(i == 100)
+    if(i == 100) // limito l'output 
       break;
 
     ++i;
@@ -115,9 +115,9 @@ void crypt(char M[], char k[]){   //funzione per cifrare
   short i = 0;
   while (C[i] != '\n') { //stampa in hex
     printf("%2x ", C[i]);
-    if((i%8)==0)
+    if((i%8)==0)  // quando ne stampa 8 va a capo (più ordinato)
       puts("");
-    if(i == 100)
+    if(i == 100) // limito la stampa
       break;
     ++i;
   }
@@ -128,14 +128,14 @@ void decrypt(char C[], char k[]){  //funzione per decifrare
   for (int i = 0; i < strlen(k); i++) {
     M[i] = C[i]^k[i];
   }
-  printf("%c[1mCleartext (M): %c[0m %s", 27, 27, M);
+  printf("%c[1mCleartext (M): %c[0m %s", 27, 27, M); // il 27 "grassetta" il cleartext
   printf("\nHEX (M): \e[0;35m\n");
   short i = 0;
-  while (M[i] != '\n') {
+  while (M[i] != '\n') { //stampa in hex
     printf("%2x ", M[i]);
-    if((i%8)==0)
+    if((i%8)==0) // quando ne stampa 8 va a capo (più ordinato)
       puts("");
-    if(i == 100)
+    if(i == 100) // limito la stampa
       break;
     ++i;
   }
@@ -169,7 +169,7 @@ void menu(){
 }
 
 void error(void){ // funzione per generare l'errore
-  printf("\e[1;1H\e[2J\n");
+  printf("\e[1;1H\e[2J\n"); // fa la stessa cosa di CTRL+L ("pulisce" l'output scorrendo), può non funzionare ovunque (ma è solo estetico), !! non usare system("cls") !!
   puts("\033[0;31mYour input is incorrect\a\033[0m");
   abort();
 }
@@ -179,7 +179,7 @@ void export(void){ // funzione per salvare i risultati su file
     FILE *fileptr;
     fileptr = fopen("export.txt", "w");
     if(!fileptr){
-      puts("\033[0;31mSome problems occurred while opening/writing the file may be insufficient permissions.\033[0m");
+      puts("\033[0;31mSome problems occurred while opening/writing the file may be insufficient permissions. Try running as sudo.\033[0m");
     }else{
       fprintf(fileptr, "\t\t\tYour key(k) is:\n===============================================================\n%s\t\t(KEEP IT SECRET)\n===============================================================\n\n\t\t\tCleartext(M):\n===============================================================\n%s===============================================================\n\n\t\t\tCiphertext(C):\n===============================================================\n%s\n===============================================================\n\n"
       , k, M, C);
